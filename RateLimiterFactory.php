@@ -12,7 +12,6 @@
 namespace Symfony\Component\RateLimiter;
 
 use Symfony\Component\Lock\LockFactory;
-use Symfony\Component\Lock\NoLock;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\RateLimiter\Policy\FixedWindowLimiter;
@@ -82,21 +81,20 @@ final class RateLimiterFactory
         };
 
         $options
-            ->define('id')->required()
-            ->define('policy')
-                ->required()
-                ->allowedValues('token_bucket', 'fixed_window', 'sliding_window', 'no_limit')
+            ->setRequired('id')
+            ->setRequired('policy')
+                ->addAllowedValues('policy', ['token_bucket', 'fixed_window', 'sliding_window', 'no_limit'])
 
-            ->define('limit')->allowedTypes('int')
-            ->define('interval')->allowedTypes('string')->normalize($intervalNormalizer)
-            ->define('rate')
-                ->default(function (OptionsResolver $rate) use ($intervalNormalizer) {
+            ->setDefined('limit')->addAllowedTypes('limit', ['int'])
+            ->setDefined('interval')->addAllowedTypes('interval', ['string'])->setNormalizer('interval', $intervalNormalizer)
+            ->setDefined('rate')
+                ->setDefault('rate', function (OptionsResolver $rate) use ($intervalNormalizer) {
                     $rate
-                        ->define('amount')->allowedTypes('int')->default(1)
-                        ->define('interval')->allowedTypes('string')->normalize($intervalNormalizer)
+                        ->setDefined('amount')->addAllowedTypes('amount', ['int'])->setDefault('amount', 1)
+                        ->setDefined('interval')->addAllowedTypes('interval', ['string'])->setNormalizer('interval', $intervalNormalizer)
                     ;
                 })
-                ->normalize(function (Options $options, $value) {
+                ->setNormalizer('rate', function (Options $options, $value) {
                     if (!isset($value['interval'])) {
                         return null;
                     }
